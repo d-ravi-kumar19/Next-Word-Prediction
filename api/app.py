@@ -22,7 +22,7 @@ def generate_suggestions(search_text):
             predicted_index = np.argmax(predicted_probs)
 
 
-            print(predicted_index)
+            # print(predicted_index)
             output_word = ""
             for word, index in tokenizer.word_index.items():
                 if index == predicted_index:
@@ -32,7 +32,7 @@ def generate_suggestions(search_text):
             suggestions = search_text + " " + output_word
     except Exception:
         pass
-    print("suggestions:  ",suggestions)
+    # print("suggestions:  ",suggestions)
     return suggestions
 
 @app.route('/') 
