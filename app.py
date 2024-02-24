@@ -42,7 +42,7 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     search_text = request.form['search_text'].lower()
-    print("Search text:",search_text)
+    # print("Search text:",search_text)
     matching_words = generate_suggestions(search_text)
     return jsonify(matching_words)
 
