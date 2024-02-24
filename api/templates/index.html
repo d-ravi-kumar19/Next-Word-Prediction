@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next word predictor</title>
+    <style>
+        body {
+            height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e4e9f7;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fdfdfd;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .container:hover {
+            transform: scale(1.02);
+        }
+
+        .header {
+            font-family: sans-serif;
+            font-size: 30px;
+            font-weight: 600;
+        }
+
+        /* #search_text {
+            width: 70vh;
+            height: 5vh;
+            padding: 2px 7px;
+            border-radius: 5px;
+            border: 1px solid #6d6b6b;
+        } */
+        #search_text {
+            width: calc(70vh - 18px);
+            height: 5vh;
+            padding: 2px 7px;
+            border-radius: 5px;
+            border: 1px solid #6d6b6b;
+            transition: border-color 0.3s ease-in-out;
+        }
+
+        #search_text:focus {
+            border-color: #4285f4;
+        }
+
+        #suggestions {
+            display: none;
+            position: absolute;
+            background-color: #f1f1f1;
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: calc(70vh - 24px);
+            /* 20px accounts for padding and border */
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            text-align: left;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #suggestions:hover {
+            transform: scale(1.01);
+        }
+
+        .suggestion-item {
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .suggestion-item:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="box">
+            <div class="header">
+                <p>Next Word Predictor</p>
+            </div>
+            <form autocomplete="off" action="\predict" method="post">
+                <div class="searchbar">
+                    <input type="text" id="search_text" name="search_text" onkeyup="showSuggestions()"
+                        placeholder="Search" autocomplete="off">
+                </div>
+
+                <div id="suggestions"></div>
+            </form>
+
+        </div>
+
+    </div>
+    <!-- Add this script in your HTML file -->
+    <script>
+        const search_input = document.getElementById('search_text');
+        const suggestions = document.getElementById('suggestions');
+        const suggestionItems = document.querySelectorAll('.suggestion-item');
+        let selectedSuggestionIndex = -1;
+
+        function showSuggestions() {
+            const searchText = search_input.value.toLowerCase();
+            while (suggestions.firstChild) {
+                suggestions.removeChild(suggestions.firstChild);
+            }
+            if (searchText.trim() === '') {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'search_text=' + encodeURIComponent(searchText),
+            })
+                .then((response) => {
+                    return response.json();
+                })
+                .then((matchingWords) => {
+
+                    if (matchingWords.length > 0) {
+
+                        const suggestion = document.createElement('div');
+                        suggestion.className = 'suggestion-item';
+                        suggestion.textContent = matchingWords.trim()
+                        suggestion.onclick = function () {
+                            search_input.value = matchingWords.trim();
+                            suggestions.style.display = 'none';
+                        };
+                        suggestion.style.cursor = 'pointer';
+                        // suggestion.setAttribute('data-index', index);
+                        suggestions.appendChild(suggestion);
+
+                        suggestions.style.display = 'block';
+                        selectedSuggestionIndex = -1; // Reset selected index when suggestions are updated
+                    } else {
+                        suggestions.style.display = 'none';
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function handleArrowNavigation(event) {
+            if (suggestionItems.length === 0) return;
+
+            if (event.key === 'ArrowUp' && selectedSuggestionIndex > 0) {
+                selectedSuggestionIndex--;
+            } else if (event.key === 'ArrowDown' && selectedSuggestionIndex < suggestionItems.length - 1) {
+                selectedSuggestionIndex++;
+            }
+
+            // Remove the focus from all suggestions
+            suggestionItems.forEach((item) => {
+                item.classList.remove('selected');
+            });
+
+            // Add focus to the currently selected suggestion
+            suggestionItems[selectedSuggestionIndex].classList.add('selected');
+        }
+
+        // Handle key press event for the Enter key
+        search_input.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Prevent the default behavior of the Enter key
+
+            // If a suggestion is selected, load it into the search_input
+            if (selectedSuggestionIndex !== -1) {
+                search_input.value = suggestionItems[selectedSuggestionIndex].textContent;
+                suggestions.style.display = 'none';
+            } else {
+                // If no suggestion is selected, you can choose to submit the form or perform other actions
+                // For now, let's submit the form (adjust this according to your needs)
+                search_input.closest('form').submit();
+            }
+        } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            // Handle arrow key navigation for suggestions
+            handleArrowNavigation(event);
+        }
+    });
+
+    search_input.addEventListener('focus', function () {
+        // Reset selected suggestion index when the input field gains focus
+        selectedSuggestionIndex = -1;
+    });
+    </script>
+
+</body>
+
+</html>
