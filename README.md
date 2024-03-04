@@ -1,5 +1,5 @@
 # Next Word Prediction
-
+## Progess: ![](https://geps.dev/progress/90)
 Welcome to the Next Word Prediction project! This project is focused on building a system that predicts the next word in a given sequence of text using Natural Language Processing (NLP) techniques and advanced neural network models.
 
 ## Overview
